@@ -12,141 +12,93 @@
             max-width: 400px;
             font-family: sans-serif;
         }
+        
+        .five-day {
+            margin-left: -2.5em;
+        }
     </style>
 </head>
 
 <body>
+    <!--OPENWEATERMAP API - 5-DAY FORECAST 
+        An application that lets users request the 5-day weather forecast (http://openweathermap.org/forecast5) 
+        by entering a city name in a form.  
+        
+        @writtenby Jesse Hernandez
+    -->
 
-    <pre id="result"></pre>
+    <pre id="date"></pre>
     <h1>Weather App</h1>
 
     <main class="">
         <section class="form">
             <form id="form1" action="#" onsubmit="return validateForm(this);">
-                City Name: <input type="text" name="city">
-
+                <input type="text" placeholder="US City" name="city">
                 <button>Submit</button>
-                <p id="valid-city-error" style="color:red;"></p>
             </form>
-            <div id="submission-message"></div>
-            <div id="weather-api-data"></div>
         </section>
 
-        <section id="five-day">
-            <div id="forecast"></div>
-
-        </section>
+        <h2>FIVE DAY FORECAST</h2>
+        <div class="city"></div>
+        <ul class="five-day"></ul>
+        <ul class="desc_img"></ul>
 
 
     </main>
 
     <script>
-        // converting kelvin to fahrenheit
-        function kelvinToF(value) {
-            var fahrenheit = (((Number(value) - 273.15) * 9) / 5) + 32;
-            return fahrenheit.toFixed(2);
-        }
+        $('#date').html(Date());
+        // var reqURL = "http://api.openweathermap.org/data/2.5/forecast?id=524901&APPID={cafd099fedfea4fbea224c1252885dd3}";
 
         $('button').on('click', function(e) {
-                    e.preventDefault(); // prevents normal submission behavior
+            e.preventDefault(); // prevents normal submission behavior
 
-                    // JSON form values
-                    var city = $('input').val();
+            // JSON form value
+            var city = $('input').val();
+            $('.city').append(city);
 
-                    requestJSON(requri, function(json) {
-                                if (json.message == "Not Found" || username == '') {
-                                    $('#weather-api-data').html("<h2>City Not Found</h2>");
-                                } else {
-                                    // else we have a user and we display their info
-                                    var forecast_date = new Date(json.dt);
-                                    var temp = json.temp;
-                                    var min = json.temp_min;
-                                    var max = json.temp_max;
-                                    var description = json.main;
-                                    var desc_icon = json.icon;
+            // API Key and Request URL
+            var APIKey = "cafd099fedfea4fbea224c1252885dd3";
+            var requri = "http://api.openweathermap.org/data/2.5/forecast?q=" + city + ",us&APPID=" + APIKey;
 
-                                    var outhtml = '<h2>' + city + ' <span class="smallname">' + forecast_date + '</span></h2>';
-                                    outhtml = outhtml + '<div class="ghcontent"><div class="avi"><a href="' + profileurl + '" target="_blank"><img src="' + aviurl + '" width="80" height="80" alt="' + username + '"></a></div>';
-                                    outhtml = outhtml + '<p>Followers: ' + followersnum + ' - Following: ' + followingnum + '<br>Repos: ' + reposnum + '</p></div>';
-                                    outhtml = outhtml + '<div class="repolist clearfix">';
+            // API connection test in console
+            var connectionTEST = $.getJSON(requri, function() {
+                    console.log("Connection: success");
+                })
+                .done(function() {
+                    console.log("Connection: second success");
+                })
+                .fail(function() {
+                    console.log("Connection: error");
+                })
+                .always(function() {
+                    console.log("Test: complete");
+                });
+            console.log(requri);
 
+            // Calling API & fetching JSON
+            $.ajax({
+                url: requri,
+                dataType: 'jsonp',
+                success: function(json) {
+                    // turning json objects into strings
+                    JSON.stringify(json);
 
-                                });
+                    for (var i = 0; i < 5; i++) {
+                        var forecast_date = new Date((json.list[i].dt * 1000)); // "* 1000" brings date to current date
+                        var temp = Math.round((((Number(json.list[i].main.temp) - 273.15) * 9) / 5) + 32); // converting to F
+                        var min = Math.round((((Number(json.list[i].main.temp_min) - 273.15) * 9) / 5) + 32); // converting to F
+                        var max = Math.round((((Number(json.list[i].main.temp_max) - 273.15) * 9) / 5) + 32); // converting to F
+                        var humidity = json.list[i].main.humidity;
+                        var description = json.list[i].weather[0].description;
+                        var desc_icon = json.list[i].weather[0].icon;
 
-                            function requestJSON(url, callback) {
-                                $.ajax({
-                                    url: "http://api.openweathermap.org/data/2.5/forecast?id=524901&APPID={cafd099fedfea4fbea224c1252885dd3}",
-                                    complete: function(xhr) {
-                                        callback.call(null, xhr.responseJSON);
-                                    }
-                                });
-                            }
-
-                            // converting forecast string to date format
-
-
-
-
-                            requestJSON(requri, function(json) {
-
-                                    // const cities = [];
-                                    // var apiKey = "cafd099fedfea4fbea224c1252885dd3";
-                                    // var jsonURL = "http://api.openweathermap.org/data/2.5/forecast?id=524901&APPID={cafd099fedfea4fbea224c1252885dd3}";
-
-                                    // $.getJSON(jsonURL, function(data) {
-                                    //     $('#result').text(JSON.stringify(data, null, 2));
-                                    // }, "json");
-
-                                    // http://api.openweathermap.org/data/2.5/forecast?id=524901&APPID={cafd099fedfea4fbea224c1252885dd3}
-
-
-                                    $(document).ready(function() {
-                                        $('form button').on('click', function(e) {
-                                            //cancel the default form submission
-                                            e.preventDefault();
-                                            //gather up all form-field values
-                                            var city = $('#form1').serialize();
-                                            console.log(city);
-
-                                            //send the request
-                                            $.post("http://api.openweathermap.org/data/2.5/forecast?id=524901&APPID={cafd099fedfea4fbea224c1252885dd3}", formData, function(result, status) {
-                                                //when the server replies...
-                                                if (status == "success") {
-                                                    $('#message').text('POST succeeded');
-                                                } else {
-                                                    $('#message').text('POST failed');
-                                                }
-                                                $('form button').removeAttr('disabled');
-                                            });
-
-                                            //temporarily disable button to prevent double-submit
-                                            // this happens before post completes
-                                            $('form button').attr('disabled', 'disabled');
-                                        });
-
-                                        // receive JSON data from server
-                                        $.getJSON(URL, function(data, status) {
-                                            if (status == "success") {
-                                                // handle successful request
-                                                var forecast_date = new Date(json.list.dt);
-                                                var temp = json.list.main.temp;
-                                                var min = json.list.main.temp_min;
-                                                var max = json.list.main.temp_max;
-                                                var humidity = json.list.main.humidity;
-                                                var description = json.list.weather.main;
-                                                var desc_icon = json.list.weather.icon;
-
-                                                var outhtml = '<h2>' + city + ' <span class="smallname">' + forecast_date + '</span></h2>';
-
-                                                outhtml = outhtml + '<div class="ghcontent"><div class="avi"><a href="' + profileurl + '" target="_blank"><img src="' + aviurl + '" width="80" height="80" alt="' + username + '"></a></div>';
-                                                outhtml = outhtml + '<p>Followers: ' + followersnum + ' - Following: ' + followingnum + '<br>Repos: ' + reposnum + '</p></div>';
-                                                outhtml = outhtml + '<div class="repolist clearfix">';
-                                            } else {
-                                                // request failed
-                                                $('#weather-api-data').html("<h2>City Not Found</h2>");
-                                            }
-                                        });
-                                    });
+                        // appending data to div and output to HTML
+                        $('.five-day').append("Date: " + forecast_date + ' </br> Temp: ' + temp + '&deg; </br> Min: ' + min + '&deg; </br> Max: ' + max + '&deg;</br> Humidity: ' + humidity + '% </br> Desc.: ' + description + '</br>' + '<img src="http://openweathermap.org/img/w/' + desc_icon + '.png"></br></br><hr>');
+                    }
+                }
+            });
+        })
     </script>
 
 
